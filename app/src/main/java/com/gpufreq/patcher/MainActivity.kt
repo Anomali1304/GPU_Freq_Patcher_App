@@ -1531,12 +1531,13 @@ fun EditorContent(
         // Preview generated tiers
         val generatedTiers = remember(parsedTop, parsedStep) {
             val list = mutableListOf<Int>()
-            if (parsedTop > baseMaxFreq && parsedStep > 0) {
-                var f = baseMaxFreq + parsedStep
+            val safeStep = if (parsedStep >= 1000) parsedStep else naturalStepKhz
+            if (parsedTop > baseMaxFreq && safeStep > 0) {
+                var f = baseMaxFreq + safeStep
                 while (f <= parsedTop) {
                     list.add(f)
+                    f += safeStep
                 }
-                f += parsedStep
                 if (list.isEmpty() || list.last() < parsedTop) {
                     list.add(parsedTop)
                 }
