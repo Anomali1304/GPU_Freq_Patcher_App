@@ -1970,7 +1970,7 @@ fun EditorContent(
 
             // Tools Card
             Text(
-                text = "TUNING CEPAT",
+                text = "QUICK TUNING",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
                 color = textSecondary,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 6.dp)
@@ -1997,10 +1997,10 @@ fun EditorContent(
                     ) {
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text("⚡ Auto-OC Aktif", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = SystemPurple)
+                                Text("⚡ Auto-OC Active", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = SystemPurple)
                                 Text("(${autoOcTargetKhz / 1000} MHz)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = textPrimary)
                             }
-                            Text("Kurva otomatis menjaga batas ${state.slotCount} slot", fontSize = 11.sp, color = textSecondary)
+                            Text("Curve automatically maintains ${state.slotCount} slots limit", fontSize = 11.sp, color = textSecondary)
                         }
                         Switch(
                             checked = isAutoOcEnabled,
@@ -2034,7 +2034,7 @@ fun EditorContent(
                         colors = ButtonDefaults.buttonColors(containerColor = SystemGreen),
                         contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Text("Offset Volt (UV/OV)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Volt Offset (UV/OV)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
 
@@ -2073,7 +2073,7 @@ fun EditorContent(
                         border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
                         contentPadding = PaddingValues(horizontal = 2.dp)
                     ) {
-                        Text("Sortir", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Sort", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
@@ -2119,10 +2119,10 @@ fun EditorContent(
                 ) {
                     Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("⚓ Proteksi Efuse AVS", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFFFB703))
+                            Text("⚓ AVS Efuse Anchor", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFFFB703))
                         }
                         Text(
-                            text = if (allowAnchorChange) "Perubahan frekuensi jangkar diizinkan (berisiko bila efuse SoC aktif)." else "3 frekuensi jangkar pabrik dikunci aman agar bootloop terhindar.",
+                            text = if (allowAnchorChange) "Anchor frequency changes allowed (risk of bootloop if SoC efuse active)." else "3 stock anchor frequencies locked safely to prevent bootloops.",
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                             color = textSecondary
                         )
