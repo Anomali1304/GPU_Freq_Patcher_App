@@ -105,9 +105,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateRow(i: Int, r: OppRow) {
         if (i in rows.indices) {
-            rows[i] = r
+            // Guarantee vsram >= volt invariant
+            val safeVsram = maxOf(r.volt, r.vsram)
+            // Auto-compute posdiv if current posdiv fails PLL readback for new frequency
+            val safePosdiv = if (!OppEngine.pllReadbackOk(r.freq, r.posdiv)) {
+                (0..3).firstOrNull { OppEngine.pllReadbackOk(r.freq, it) } ?: r.posdiv
+            } else {
+                r.posdiv
+            }
+            rows[i] = r.copy(vsram = safeVsram, posdiv = safePosdiv)
             revalidate()
         }
+    }
+
+    fun autoSortDescending() {
+        if (rows.size > 1) {
+            val sorted = rows.sortedByDescending { it.freq }
+            rows.clear()
+            rows.addAll(sorted)
+            revalidate()
+        }
+    }
+
+    fun autoFixPllPosdiv() {
+        for (i in rows.indices) {
+            val r = rows[i]
+            if (!OppEngine.pllReadbackOk(r.freq, r.posdiv)) {
+                val validDiv = (0..3).firstOrNull { OppEngine.pllReadbackOk(r.freq, it) }
+                if (validDiv != null) {
+                    rows[i] = r.copy(posdiv = validDiv)
+                }
+            }
+        }
+        revalidate()
+    }
+
+    fun autoFixVsram() {
+        for (i in rows.indices) {
+            val r = rows[i]
+            if (r.vsram < r.volt) {
+                rows[i] = r.copy(vsram = r.volt)
+            }
+        }
+        revalidate()
     }
 
     fun deleteRow(i: Int) {
@@ -321,7 +361,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = EditorUiState.Loaded(
                     fileName = finalFileName,
                     detectedHardwareId = hwId,
-                    slotCount = analyzed.slotCount
+                    slotCount = analyzed.slotCount,
+                    anchorFreqs = analyzed.anchorFreqs
                 )
             } catch (e: Exception) {
                 _uiState.value = EditorUiState.Error(e.message ?: "Unknown error")
@@ -413,7 +454,8 @@ sealed class EditorUiState {
     data class Loaded(
         val fileName: String,
         val detectedHardwareId: String? = null,
-        val slotCount: Int = 0
+        val slotCount: Int = 0,
+        val anchorFreqs: List<Int> = emptyList()
     ) : EditorUiState()
     data class Success(val message: String) : EditorUiState()
     data class Error(val message: String) : EditorUiState()

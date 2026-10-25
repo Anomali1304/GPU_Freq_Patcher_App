@@ -15,7 +15,6 @@ import com.gpufreq.patcher.util.OppRow
 import com.gpufreq.patcher.util.Issue
 import com.gpufreq.patcher.util.Severity
 import com.gpufreq.patcher.util.OppEngine
-import com.gpufreq.patcher.util.OppTemplates
 
 import android.content.Intent
 import android.net.Uri
@@ -802,7 +801,9 @@ fun MainScreen(viewModel: MainViewModel = viewModel(), isDarkTheme: Boolean) {
                                     onApplyVoltageOffset = { offsetMv -> viewModel.applyVoltageOffset(offsetMv) },
                                     onFitSlots = { viewModel.fitSlots() },
                                     onResetStock = { viewModel.resetToStock() },
-                                    onApplyOppTemplate = { viewModel.applyOppTemplate(it) },
+                                    onAutoSortDescending = { viewModel.autoSortDescending() },
+                                    onAutoFixPllPosdiv = { viewModel.autoFixPllPosdiv() },
+                                    onAutoFixVsram = { viewModel.autoFixVsram() },
                                     onLoadExternalKoTemplate = { uri ->
                                         viewModel.loadExternalKoTemplate(uri,
                                             onSuccess = {
@@ -1305,7 +1306,9 @@ fun EditorContent(
     onApplyVoltageOffset: (Int) -> Unit,
     onFitSlots: () -> Unit,
     onResetStock: () -> Unit,
-    onApplyOppTemplate: (List<OppRow>) -> Unit,
+    onAutoSortDescending: () -> Unit,
+    onAutoFixPllPosdiv: () -> Unit,
+    onAutoFixVsram: () -> Unit,
     onLoadExternalKoTemplate: (Uri) -> Unit,
     onSave: (Uri) -> Unit,
     onCancel: () -> Unit
@@ -1325,12 +1328,18 @@ fun EditorContent(
     var showOcDialog by remember { mutableStateOf(false) }
     var showDiffDialog by remember { mutableStateOf(false) }
     var showVoltOffsetDialog by remember { mutableStateOf(false) }
-    var showTemplateDialog by remember { mutableStateOf(false) }
     var showDiscardDialog by remember { mutableStateOf(false) }
+    var showPreflightDialog by remember { mutableStateOf(false) }
 
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri: Uri? ->
         if (uri != null) {
             onSave(uri)
+        }
+    }
+
+    val externalKoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            onLoadExternalKoTemplate(it)
         }
     }
 
@@ -1518,89 +1527,6 @@ fun EditorContent(
         )
     }
 
-    if (showTemplateDialog) {
-        val externalKoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
-                showTemplateDialog = false
-                onLoadExternalKoTemplate(it)
-            }
-        }
-
-        AlertDialog(
-            onDismissRequest = { showTemplateDialog = false },
-            title = { Text("Template Tabel OPP Chipset Lain", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 440.dp)
-                        .verticalScroll(androidx.compose.foundation.rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        "Pilih preset tabel OPP dari chipset atau device lain, atau load langsung dari file .ko device lain. Tabel akan otomatis disesuaikan dan dicocokkan (fit & scale) dengan slot kernel module target (${state.slotCount} slot).",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = textSecondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    OutlinedButton(
-                        onClick = { externalKoLauncher.launch("*/*") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemBlue),
-                        border = androidx.compose.foundation.BorderStroke(1.5.dp, SystemBlue)
-                    ) {
-                        Icon(IconUploadFile, contentDescription = null, modifier = Modifier.size(18.dp), tint = SystemBlue)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Load dari File .ko Device Lain...", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("Atau pilih preset populer:", style = MaterialTheme.typography.labelSmall, color = textSecondary)
-
-                    OppTemplates.presets.forEach { template ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onApplyOppTemplate(template.rows)
-                                    showTemplateDialog = false
-                                },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = surfaceColor),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, SystemBlue.copy(alpha = 0.3f))
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(template.name, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textPrimary)
-                                    Badge(containerColor = SystemBlue.copy(alpha = 0.15f)) {
-                                        Text("${template.rows.size} OPP", fontSize = 10.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(template.chipset, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = SystemPurple)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(template.description, fontSize = 11.sp, color = textSecondary)
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showTemplateDialog = false }) {
-                    Text("Tutup", color = SystemBlue)
-                }
-            },
-            containerColor = surfaceColor,
-            titleContentColor = textPrimary
-        )
-    }
-
     if (showOcDialog) {
         val initialTop = baseMaxFreq + naturalStepKhz * 2
         var topFreqText by remember { mutableStateOf(initialTop.toString()) }
@@ -1760,6 +1686,201 @@ fun EditorContent(
         )
     }
 
+    if (showPreflightDialog) {
+        val isDescending = rows.size <= 1 || rows.zipWithNext().all { it.first.freq > it.second.freq }
+        val invalidPllCount = rows.count { !OppEngine.pllReadbackOk(it.freq, it.posdiv) }
+        val invalidVsramCount = rows.count { it.vsram < it.volt }
+        val maxVolt = rows.maxOfOrNull { it.volt } ?: 0
+        val maxVoltMv = maxVolt / 100.0
+        val maxFreqMhz = (rows.firstOrNull()?.freq ?: 0) / 1000.0
+        val minFreqMhz = (rows.lastOrNull()?.freq ?: 0) / 1000.0
+        val isSlotExact = rows.size == state.slotCount
+        val isSafeToSave = !hasErrors && isDescending && invalidPllCount == 0 && invalidVsramCount == 0
+
+        AlertDialog(
+            onDismissRequest = { showPreflightDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(
+                        imageVector = if (isSafeToSave) IconCheckCircle else Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = if (isSafeToSave) SystemGreen else Color(0xFFFFB703),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text("Pre-Flight Safety Check", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 440.dp)
+                        .verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        "Audit kesiapan modul sebelum disimpan ke storage untuk mencegah bootloop atau crash kernel DVFS:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textSecondary
+                    )
+
+                    // 1. Frequency Monotonicity
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDescending) SystemGreen.copy(alpha = 0.12f) else SystemRed.copy(alpha = 0.15f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (isDescending) "✓ Urutan Freq Monotonik" else "⚠ Freq Tidak Terurut Turun!",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = if (isDescending) SystemGreen else SystemRed
+                                )
+                                if (!isDescending) {
+                                    TextButton(
+                                        onClick = onAutoSortDescending,
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Sortir Sekarang", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                            Text(
+                                text = "Max: ${maxFreqMhz.toInt()} MHz → Min: ${minFreqMhz.toInt()} MHz (${rows.size} baris)",
+                                fontSize = 11.sp,
+                                color = textPrimary
+                            )
+                        }
+                    }
+
+                    // 2. PLL Posdiv Clock Readback
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (invalidPllCount == 0) SystemGreen.copy(alpha = 0.12f) else SystemRed.copy(alpha = 0.15f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (invalidPllCount == 0) "✓ Clock PLL Posdiv: 100% OK" else "⚠ $invalidPllCount Baris Posdiv PLL Invalid",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = if (invalidPllCount == 0) SystemGreen else SystemRed
+                                )
+                                if (invalidPllCount > 0) {
+                                    TextButton(
+                                        onClick = onAutoFixPllPosdiv,
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Fix Otomatis", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                            Text(
+                                text = if (invalidPllCount == 0) "Seluruh frekuensi memiliki bit synthesizer PLL yang valid." else "Posdiv salah memicu __gpufreq_abort saat DVFS clock switching.",
+                                fontSize = 11.sp,
+                                color = textPrimary
+                            )
+                        }
+                    }
+
+                    // 3. Voltage SRAM Invariant (Vsram >= Volt)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (invalidVsramCount == 0) SystemGreen.copy(alpha = 0.12f) else SystemRed.copy(alpha = 0.15f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (invalidVsramCount == 0) "✓ Invariant Vsram >= Volt: Valid" else "⚠ $invalidVsramCount Baris Vsram < Volt Core",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = if (invalidVsramCount == 0) SystemGreen else SystemRed
+                                )
+                                if (invalidVsramCount > 0) {
+                                    TextButton(
+                                        onClick = onAutoFixVsram,
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Naikkan Vsram", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                            Text(
+                                text = "Peak Core Voltage: ${String.format(Locale.getDefault(), "%.2f mV", maxVoltMv)} ${if (maxVoltMv > 925.0) "(Voltase Tinggi - Awasi Suhu)" else "(Dalam batas aman)"}",
+                                fontSize = 11.sp,
+                                color = textPrimary
+                            )
+                        }
+                    }
+
+                    // 4. Slot Capacity Match
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSlotExact) SystemGreen.copy(alpha = 0.12f) else Color(0xFFFFB703).copy(alpha = 0.15f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = if (isSlotExact) "✓ Kapasitas Slot: Match (${rows.size} / ${state.slotCount})" else "ℹ Kapasitas Slot: ${rows.size} / ${state.slotCount} (${if (rows.size > state.slotCount) "+${rows.size - state.slotCount} baris" else "${rows.size - state.slotCount} baris"})",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = if (isSlotExact) SystemGreen else Color(0xFFFFB703)
+                            )
+                            Text(
+                                text = if (isSlotExact) "Ukuran tabel sama persis dengan modul asli." else "Modul akan dialokasikan sesuai jumlah baris tabel aktif.",
+                                fontSize = 11.sp,
+                                color = textPrimary
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPreflightDialog = false
+                        saveLauncher.launch(state.fileName)
+                    },
+                    enabled = isSafeToSave,
+                    colors = ButtonDefaults.buttonColors(containerColor = SystemBlue)
+                ) {
+                    Text("Lanjut Simpan .ko")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPreflightDialog = false }) {
+                    Text("Edit Lagi", color = textSecondary)
+                }
+            },
+            containerColor = surfaceColor,
+            titleContentColor = textPrimary
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -1798,7 +1919,7 @@ fun EditorContent(
                 }
 
                 Button(
-                    onClick = { saveLauncher.launch(state.fileName) },
+                    onClick = { showPreflightDialog = true },
                     enabled = !hasErrors,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SystemBlue,
@@ -1853,6 +1974,30 @@ fun EditorContent(
                     icon = IconTuning,
                     badgeColor = badgeColor
                 )
+                if (!isSlotMatch) {
+                    HorizontalDivider(color = GlassBorder, modifier = Modifier.padding(start = 56.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (slotDifference > 0) "Tabel kelebihan $slotDifference slot" else "Tabel kurang ${-slotDifference} slot",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = textSecondary
+                        )
+                        Button(
+                            onClick = onFitSlots,
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SystemPurple)
+                        ) {
+                            Text("Fit ke ${state.slotCount} Slot", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
 
@@ -1919,13 +2064,15 @@ fun EditorContent(
                     }
 
                     Button(
-                        onClick = { showTemplateDialog = true },
+                        onClick = { externalKoLauncher.launch("*/*") },
                         modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = SystemPurple),
                         contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Text("Template Chipset", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Icon(IconUploadFile, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Load OPP .ko Lain", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -1983,6 +2130,35 @@ fun EditorContent(
                         contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
                         Text("Reset Stock", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onAutoSortDescending,
+                        modifier = Modifier.weight(1f).height(42.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemBlue),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SystemBlue.copy(alpha = 0.4f)),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Text("Sortir Descending", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = onAutoFixPllPosdiv,
+                        modifier = Modifier.weight(1f).height(42.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemGreen),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SystemGreen.copy(alpha = 0.4f)),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Text("Fix Posdiv PLL", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -2189,11 +2365,14 @@ fun EditorContent(
                         } else Modifier
                     )
             ) {
+                val isAnchor = state.anchorFreqs.contains(row.freq)
+                val canDeleteThisRow = rows.size > 1 && (!isAnchor || allowAnchorChange)
                 OppEditRow(
                     index = index,
                     row = row,
                     isOcTier = isOc,
-                    canDelete = rows.size > 1,
+                    isAnchor = isAnchor,
+                    canDelete = canDeleteThisRow,
                     rowIssue = rowIssue,
                     onUpdate = { newRow -> onUpdateRow(index, newRow) },
                     onDelete = { onDeleteRow(index) },
@@ -2244,6 +2423,7 @@ fun OppEditRow(
     index: Int,
     row: OppRow,
     isOcTier: Boolean = false,
+    isAnchor: Boolean = false,
     canDelete: Boolean,
     rowIssue: Issue? = null,
     onUpdate: (OppRow) -> Unit,
@@ -2296,18 +2476,30 @@ fun OppEditRow(
                 Box(
                     modifier = Modifier
                         .background(
-                            color = if (isOcTier) SystemPurple.copy(alpha = 0.20f) else SystemBlue.copy(alpha = 0.15f),
+                            color = when {
+                                isAnchor -> Color(0xFFFFB703).copy(alpha = 0.20f)
+                                isOcTier -> SystemPurple.copy(alpha = 0.20f)
+                                else -> SystemBlue.copy(alpha = 0.15f)
+                            },
                             shape = RoundedCornerShape(6.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = if (isOcTier) "OC #$index" else "OPP #$index",
+                        text = when {
+                            isAnchor -> "⚓ ANCHOR #$index"
+                            isOcTier -> "OC #$index"
+                            else -> "OPP #$index"
+                        },
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         ),
-                        color = if (isOcTier) SystemPurple else SystemBlue
+                        color = when {
+                            isAnchor -> Color(0xFFFFB703)
+                            isOcTier -> SystemPurple
+                            else -> SystemBlue
+                        }
                     )
                 }
 
@@ -2400,6 +2592,43 @@ fun OppEditRow(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
+
+                // Quick Stepper for Frequency
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(inputBg)
+                            .clickable {
+                                val newFreq = (row.freq - 25000).coerceAtLeast(50000)
+                                val newPosdiv = (0..3).firstOrNull { OppEngine.pllReadbackOk(newFreq, it) } ?: row.posdiv
+                                onUpdate(row.copy(freq = newFreq, posdiv = newPosdiv))
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("-25M", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(inputBg)
+                            .clickable {
+                                val newFreq = (row.freq + 25000).coerceAtMost(3000000)
+                                val newPosdiv = (0..3).firstOrNull { OppEngine.pllReadbackOk(newFreq, it) } ?: row.posdiv
+                                onUpdate(row.copy(freq = newFreq, posdiv = newPosdiv))
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("+25M", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = SystemBlue)
+                    }
+                }
             }
 
             // Core Voltage Input Box
@@ -2453,6 +2682,43 @@ fun OppEditRow(
                         cursorBrush = SolidColor(SystemBlue),
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
+
+                // Quick Stepper for Voltage
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(inputBg)
+                            .clickable {
+                                val newVolt = maxOf(50000, OppEngine.snap625Up(row.volt - 6250))
+                                val newVsram = maxOf(newVolt, row.vsram)
+                                onUpdate(row.copy(volt = newVolt, vsram = newVsram))
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("-6.25m", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(inputBg)
+                            .clickable {
+                                val newVolt = OppEngine.snap625Up((row.volt + 6250).coerceAtMost(1500000))
+                                val newVsram = maxOf(newVolt, row.vsram)
+                                onUpdate(row.copy(volt = newVolt, vsram = newVsram))
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("+6.25m", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = SystemBlue)
+                    }
                 }
             }
         }
@@ -2515,7 +2781,11 @@ fun OppEditRow(
                     Text(
                         text = if (isPllValid) "PLL OK" else "PLL ERR",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
-                        color = if (isPllValid) SystemGreen else SystemRed
+                        color = if (isPllValid) SystemGreen else SystemRed,
+                        modifier = if (!isPllValid) Modifier.clickable {
+                            val valid = (0..3).firstOrNull { OppEngine.pllReadbackOk(row.freq, it) }
+                            if (valid != null) onUpdate(row.copy(posdiv = valid))
+                        } else Modifier
                     )
                 }
                 Box(
@@ -2580,6 +2850,32 @@ fun OppEditRow(
                         cursorBrush = SolidColor(SystemBlue),
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
+            }
+        }
+
+        if (row.vsram < row.volt) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(SystemRed.copy(alpha = 0.12f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Vsram (${row.vsram / 100}mV) < Core Volt (${row.volt / 100}mV)",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = SystemRed
+                )
+                TextButton(
+                    onClick = { onUpdate(row.copy(vsram = row.volt)) },
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                ) {
+                    Text("Fix Vsram=Volt", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
                 }
             }
         }

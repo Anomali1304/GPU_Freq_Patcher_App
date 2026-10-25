@@ -18,7 +18,7 @@ A powerful, native Android application designed to inspect, modify, and patch AR
 - **ELF & Symbol Parsing**: Automatically scans ELF64 binaries and parses symbol tables (`g_default_gpu`, `g_gpu_default_opp_table`, etc.) to locate GPU OPP structs without manual offset guesswork.
 - **Dynamic OPP Row Expansion & Reduction**: Add, delete, or modify OPP rows while automatically managing slot constraints and null-terminating unused slots for driver safety.
 - **Graduated Overclocking (OC) Generator**: Create tiered overclocking steps above stock maximum frequency that precisely match natural stock step intervals, complete with **Auto-Sync** mode that dynamically adapts when rows are modified.
-- **Chipset & Device OPP Templates (Presets)**: Instantly import and adapt OPP tables from other chipsets and devices (e.g., MediaTek Dimensity 8100, Dimensity 9000, Helio G99, Mali-G715 Immortalis) with automatic slot fitting and scaling.
+- **External `.ko` OPP Extraction & Cross-Device Fitting**: Directly extract real OPP tables from another device's compiled kernel module binary (`.ko`), automatically scaling and fitting the extracted table to your active module's slot allocation.
 - **Voltage Offset Tuning (UV / OV)**: Apply global or per-entry voltage offsets in millivolts (mV) for undervolting (power savings) or overvoltaging (OC stability).
 - **Real-time PLL Validation**: Validates frequency, `posdiv`, and `vsram` against hardware PLL constraints (e.g., MT6789 DVFS rules) before saving to prevent kernel crashes (`__gpufreq_abort`).
 - **Visual Diff Inspector**: Side-by-side comparison between stock and modified OPP tables.
@@ -43,7 +43,7 @@ A powerful, native Android application designed to inspect, modify, and patch AR
 1. **Import Module**: Tap the **"Import Module (.ko)"** button to select your device's compiled GPU kernel module binary (e.g., `mtk_gpufreq.ko` or `mt_gpu.ko`).
 2. **Inspect & Edit**: View detected hardware target, slot allocation, and frequency/voltage tiers. Edit individual OPP rows or use the **Tools** menu.
 3. **Apply Presets / Overclock**:
-   - Use **Template Chipset** to import optimized OPP tables from Dimensity or Helio series.
+   - Use **Load OPP .ko Lain** to extract and adapt the real OPP table directly from another device's `.ko` file.
    - Use **Generate OC** to build stepped overclocking tiers with automatic step matching.
    - Use **Offset Volt** for rapid undervolting / overvoltaging.
 4. **Validate & Save**: The engine validates all parameters against hardware rules in real-time. Tap **Apply** to generate and save your patched `.ko` binary.
