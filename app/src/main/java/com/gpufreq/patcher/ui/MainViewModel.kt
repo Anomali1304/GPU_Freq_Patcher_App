@@ -150,74 +150,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         revalidate()
     }
 
-    fun deleteRow(i: Int) {
-        if (i in rows.indices) {
-            val deleted = rows.removeAt(i)
-            // If Auto-OC is enabled and the deleted row is part of base table, auto-adjust OC curve
-            val sMax = stockMaxFreq
-            if (isAutoOcEnabled && autoOcTargetKhz != null && sMax != null) {
-                if (deleted.freq <= sMax) {
-                    autoAdjustOc()
-                    return
-                }
-            }
-            revalidate()
-        }
-    }
-
-    fun insertBelow(i: Int) {
-        if (i in rows.indices) {
-            val base = rows[i]
-            val step = naturalStepKhz
-            val newFreq = maxOf(50000, base.freq - step)
-            rows.add(i + 1, base.copy(freq = newFreq))
-            val sMax = stockMaxFreq
-            if (isAutoOcEnabled && autoOcTargetKhz != null && sMax != null && base.freq <= sMax) {
-                autoAdjustOc()
-                return
-            }
-            revalidate()
-        }
-    }
-
-    fun addOppAtTop() {
-        if (rows.isNotEmpty()) {
-            val top = rows.first()
-            val step = naturalStepKhz
-            val newFreq = top.freq + step
-            val newVolt = OppEngine.snap625Up(top.volt + 6250) // +6.25 mV
-            val newVsram = maxOf(newVolt, top.vsram)
-            val newPosdiv = (0..3).firstOrNull { OppEngine.pllReadbackOk(newFreq, it) } ?: top.posdiv
-            rows.add(0, OppRow(freq = newFreq, volt = newVolt, vsram = newVsram, posdiv = newPosdiv, vaging = 0))
-            revalidate()
-        }
-    }
-
-    fun addOppAtBottom() {
-        if (rows.isNotEmpty()) {
-            val bottom = rows.last()
-            val step = naturalStepKhz
-            val newFreq = maxOf(50000, bottom.freq - step)
-            val newVolt = maxOf(50000, bottom.volt - 6250) // -6.25 mV
-            val newVsram = maxOf(newVolt, bottom.vsram - 6250)
-            val newPosdiv = (0..3).firstOrNull { OppEngine.pllReadbackOk(newFreq, it) } ?: bottom.posdiv
-            rows.add(OppRow(freq = newFreq, volt = newVolt, vsram = newVsram, posdiv = newPosdiv, vaging = bottom.vaging))
-            revalidate()
-        }
-    }
-
     fun applyOverclock(topKhz: Int, stepKhz: Int, voltTop: Int, autoSync: Boolean = true) {
+        val a = analysis ?: return
         val sMax = stockMaxFreq ?: rows.firstOrNull()?.freq ?: return
         autoOcTargetKhz = topKhz
         autoOcStepKhz = stepKhz
         autoOcVoltTop = voltTop
         isAutoOcEnabled = autoSync
 
-        // Filter out existing OC rows (those above base stock max) to get clean base
+        // Filter out existing OC rows to get base table
         val baseRows = rows.filter { it.freq <= sMax }
         val generated = OppEngine.generateOverclock(baseRows, topKhz, stepKhz, voltTop)
+        // Strictly fit to slotCount so table size NEVER changes
+        val fitted = OppEngine.fitToSlots(generated, a.slotCount, a.anchorFreqs.toSet()) ?: generated
         rows.clear()
-        rows.addAll(generated)
+        rows.addAll(fitted)
         revalidate()
     }
 
@@ -251,6 +198,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun autoAdjustOc() {
+        val a = analysis ?: return
         val target = autoOcTargetKhz ?: return
         val step = autoOcStepKhz ?: naturalStepKhz
         val volt = autoOcVoltTop ?: OppEngine.snap625Up((rows.firstOrNull()?.volt ?: 85000) + 50000)
@@ -258,8 +206,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val baseRows = rows.filter { it.freq <= sMax }
         if (baseRows.isNotEmpty()) {
             val generated = OppEngine.generateOverclock(baseRows, target, step, volt)
+            val fitted = OppEngine.fitToSlots(generated, a.slotCount, a.anchorFreqs.toSet()) ?: generated
             rows.clear()
-            rows.addAll(generated)
+            rows.addAll(fitted)
         }
         revalidate()
     }

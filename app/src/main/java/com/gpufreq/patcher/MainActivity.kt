@@ -790,16 +790,11 @@ fun MainScreen(viewModel: MainViewModel = viewModel(), isDarkTheme: Boolean) {
                                     onToggleAllowAnchorChange = { viewModel.updateAllowAnchorChange(it) },
                                     onToggleAutoOc = { viewModel.setAutoOcSyncEnabled(it) },
                                     onUpdateRow = { index, row -> viewModel.updateRow(index, row) },
-                                    onDeleteRow = { index -> viewModel.deleteRow(index) },
-                                    onAddBelow = { index -> viewModel.insertBelow(index) },
-                                    onAddAtTop = { viewModel.addOppAtTop() },
-                                    onAddAtBottom = { viewModel.addOppAtBottom() },
                                     onApplyOverclock = { topKhz, stepKhz, voltTop, autoSync ->
                                         viewModel.applyOverclock(topKhz, stepKhz, voltTop, autoSync)
                                     },
                                     onClearOc = { viewModel.clearOcTiers() },
                                     onApplyVoltageOffset = { offsetMv -> viewModel.applyVoltageOffset(offsetMv) },
-                                    onFitSlots = { viewModel.fitSlots() },
                                     onResetStock = { viewModel.resetToStock() },
                                     onAutoSortDescending = { viewModel.autoSortDescending() },
                                     onAutoFixPllPosdiv = { viewModel.autoFixPllPosdiv() },
@@ -1297,14 +1292,9 @@ fun EditorContent(
     onToggleAllowAnchorChange: (Boolean) -> Unit,
     onToggleAutoOc: (Boolean) -> Unit,
     onUpdateRow: (Int, OppRow) -> Unit,
-    onDeleteRow: (Int) -> Unit,
-    onAddBelow: (Int) -> Unit,
-    onAddAtTop: () -> Unit,
-    onAddAtBottom: () -> Unit,
     onApplyOverclock: (topKhz: Int, stepKhz: Int, voltTop: Int, autoSync: Boolean) -> Unit,
     onClearOc: () -> Unit,
     onApplyVoltageOffset: (Int) -> Unit,
-    onFitSlots: () -> Unit,
     onResetStock: () -> Unit,
     onAutoSortDescending: () -> Unit,
     onAutoFixPllPosdiv: () -> Unit,
@@ -1479,7 +1469,7 @@ fun EditorContent(
                                 onClick = { offsetMvText = mv.toString() },
                                 label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                                 colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = if (offsetMvText == mv.toString()) SystemBlue.copy(0.2f) else Color.Transparent
+                                    containerColor = if (offsetMvText == mv.toString()) SystemGreen.copy(0.2f) else Color.Transparent
                                 )
                             )
                         }
@@ -1512,9 +1502,9 @@ fun EditorContent(
                         }
                         showVoltOffsetDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SystemBlue)
+                    colors = ButtonDefaults.buttonColors(containerColor = SystemGreen)
                 ) {
-                    Text("Terapkan Offset")
+                    Text("Terapkan Offset", color = Color.White)
                 }
             },
             dismissButton = {
@@ -1545,8 +1535,8 @@ fun EditorContent(
                 var f = baseMaxFreq + parsedStep
                 while (f <= parsedTop) {
                     list.add(f)
-                    f += parsedStep
                 }
+                f += parsedStep
                 if (list.isEmpty() || list.last() < parsedTop) {
                     list.add(parsedTop)
                 }
@@ -1581,7 +1571,7 @@ fun EditorContent(
                                 onClick = { topFreqText = target.toString() },
                                 label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                                 colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = if (topFreqText == target.toString()) SystemBlue.copy(0.2f) else Color.Transparent
+                                    containerColor = if (topFreqText == target.toString()) SystemPurple.copy(0.2f) else Color.Transparent
                                 )
                             )
                         }
@@ -1625,19 +1615,19 @@ fun EditorContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(SystemBlue.copy(alpha = 0.08f))
+                            .background(SystemPurple.copy(alpha = 0.08f))
                             .padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                            Text("Auto-Sync Dinamis", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = textPrimary)
-                            Text("Jika baris ditambah/dihapus, kurva OC otomatis menyesuaikan", fontSize = 11.sp, color = textSecondary)
+                            Text("Auto-Sync Fixed Slots", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = textPrimary)
+                            Text("Menyesuaikan kurva ke ${rows.size} slot tetap tanpa merusak layout modul", fontSize = 11.sp, color = textSecondary)
                         }
                         Switch(
                             checked = autoSyncChecked,
                             onCheckedChange = { autoSyncChecked = it },
-                            colors = SwitchDefaults.colors(checkedThumbColor = SystemBlue)
+                            colors = SwitchDefaults.colors(checkedThumbColor = SystemPurple)
                         )
                     }
 
@@ -1671,9 +1661,9 @@ fun EditorContent(
                         onApplyOverclock(parsedTop, parsedStep, volt, autoSyncChecked)
                         showOcDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SystemBlue)
+                    colors = ButtonDefaults.buttonColors(containerColor = SystemPurple)
                 ) {
-                    Text("Terapkan Overclock")
+                    Text("Terapkan Overclock", color = Color.White)
                 }
             },
             dismissButton = {
@@ -1749,7 +1739,7 @@ fun EditorContent(
                                         onClick = onAutoSortDescending,
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        Text("Sortir Sekarang", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
+                                        Text("Sortir Sekarang", fontSize = 11.sp, color = SystemPurple, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -1786,7 +1776,7 @@ fun EditorContent(
                                         onClick = onAutoFixPllPosdiv,
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        Text("Fix Otomatis", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
+                                        Text("Fix Otomatis", fontSize = 11.sp, color = SystemGreen, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -1823,7 +1813,7 @@ fun EditorContent(
                                         onClick = onAutoFixVsram,
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        Text("Naikkan Vsram", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
+                                        Text("Naikkan Vsram", fontSize = 11.sp, color = Color(0xFFFFB703), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -1956,48 +1946,21 @@ fun EditorContent(
                     badgeColor = SystemBlue
                 )
                 HorizontalDivider(color = GlassBorder, modifier = Modifier.padding(start = 56.dp))
-                val isSlotMatch = rows.size == state.slotCount
-                val slotDifference = rows.size - state.slotCount
-                val slotDisplay = when {
-                    isSlotMatch -> "${rows.size} / ${state.slotCount} Slots (Match)"
-                    slotDifference > 0 -> "${rows.size} / ${state.slotCount} Slots (+$slotDifference baris)"
-                    else -> "${rows.size} / ${state.slotCount} Slots ($slotDifference baris)"
-                }
-                val badgeColor = when {
-                    isSlotMatch -> SystemGreen
-                    slotDifference > 0 -> SystemPurple
-                    else -> Color(0xFFFFB703)
-                }
                 SettingsRow(
-                    label = "Slot Allocation",
-                    value = slotDisplay,
+                    label = "Kapasitas Slot",
+                    value = "${state.slotCount} Slot Tetap (Terkunci Aman)",
                     icon = IconTuning,
-                    badgeColor = badgeColor
+                    badgeColor = SystemGreen
                 )
-                if (!isSlotMatch) {
-                    HorizontalDivider(color = GlassBorder, modifier = Modifier.padding(start = 56.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = if (slotDifference > 0) "Tabel kelebihan $slotDifference slot" else "Tabel kurang ${-slotDifference} slot",
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                            color = textSecondary
-                        )
-                        Button(
-                            onClick = onFitSlots,
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = SystemPurple)
-                        ) {
-                            Text("Fit ke ${state.slotCount} Slot", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+                HorizontalDivider(color = GlassBorder, modifier = Modifier.padding(start = 56.dp))
+                val minF = (rows.lastOrNull()?.freq ?: 0) / 1000
+                val maxF = (rows.firstOrNull()?.freq ?: 0) / 1000
+                SettingsRow(
+                    label = "Rentang Frekuensi",
+                    value = "$minF MHz - $maxF MHz",
+                    icon = IconTuning,
+                    badgeColor = SystemPurple
+                )
             }
         }
 
@@ -2006,7 +1969,7 @@ fun EditorContent(
 
             // Tools Card
             Text(
-                text = "TOOLS & TUNING",
+                text = "TUNING CEPAT",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
                 color = textSecondary,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 6.dp)
@@ -2016,7 +1979,8 @@ fun EditorContent(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
                     .glassCard()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Auto-OC Active Status banner
                 if (isAutoOcEnabled && autoOcTargetKhz != null) {
@@ -2035,7 +1999,7 @@ fun EditorContent(
                                 Text("⚡ Auto-OC Aktif", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = SystemPurple)
                                 Text("(${autoOcTargetKhz / 1000} MHz)", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = textPrimary)
                             }
-                            Text("Otomatis menyesuaikan jika baris ditambah atau dihapus", fontSize = 11.sp, color = textSecondary)
+                            Text("Kurva otomatis menjaga batas ${state.slotCount} slot", fontSize = 11.sp, color = textSecondary)
                         }
                         Switch(
                             checked = isAutoOcEnabled,
@@ -2043,188 +2007,121 @@ fun EditorContent(
                             colors = SwitchDefaults.colors(checkedThumbColor = SystemPurple)
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // Tuning Action Buttons Row 1
+                // Primary Actions Row (Overclock & Voltage Offset)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Button(
                         onClick = { showOcDialog = true },
-                        modifier = Modifier.weight(1f).height(42.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SystemBlue),
-                        contentPadding = PaddingValues(horizontal = 4.dp)
-                    ) {
-                        Icon(IconTuning, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Generate OC", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-
-                    Button(
-                        onClick = { externalKoLauncher.launch("*/*") },
-                        modifier = Modifier.weight(1f).height(42.dp),
+                        modifier = Modifier.weight(1f).height(44.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = SystemPurple),
                         contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Icon(IconUploadFile, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Load OPP .ko Lain", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Icon(IconTuning, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Auto-OC Wizard", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
-                }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
                     Button(
                         onClick = { showVoltOffsetDialog = true },
-                        modifier = Modifier.weight(1f).height(42.dp),
+                        modifier = Modifier.weight(1f).height(44.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = SystemGreen),
                         contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
                         Text("Offset Volt (UV/OV)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
-
-                    OutlinedButton(
-                        onClick = { showDiffDialog = true },
-                        modifier = Modifier.weight(1f).height(42.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemBlue),
-                        border = androidx.compose.foundation.BorderStroke(1.2.dp, SystemBlue.copy(alpha = 0.5f)),
-                        contentPadding = PaddingValues(horizontal = 4.dp)
-                    ) {
-                        Text("Inspect Diff", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
+                // Secondary Toolbar (Compact 4 Utilities)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
-                        onClick = onFitSlots,
-                        modifier = Modifier.weight(1f).height(42.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemPurple),
-                        border = androidx.compose.foundation.BorderStroke(1.2.dp, SystemPurple.copy(alpha = 0.5f)),
-                        contentPadding = PaddingValues(horizontal = 4.dp)
+                        onClick = { externalKoLauncher.launch("*/*") },
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = textPrimary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                        contentPadding = PaddingValues(horizontal = 2.dp)
                     ) {
-                        Text("Fit ke ${state.slotCount} Slot", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Import .ko", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = { showDiffDialog = true },
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = textPrimary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                        contentPadding = PaddingValues(horizontal = 2.dp)
+                    ) {
+                        Text("Inspect Diff", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = onAutoSortDescending,
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = textPrimary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                        contentPadding = PaddingValues(horizontal = 2.dp)
+                    ) {
+                        Text("Sortir", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
                         onClick = onResetStock,
-                        modifier = Modifier.weight(1f).height(42.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = textSecondary),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
-                        contentPadding = PaddingValues(horizontal = 4.dp)
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemRed),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SystemRed.copy(alpha = 0.4f)),
+                        contentPadding = PaddingValues(horizontal = 2.dp)
                     ) {
-                        Text("Reset Stock", fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onAutoSortDescending,
-                        modifier = Modifier.weight(1f).height(42.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemBlue),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SystemBlue.copy(alpha = 0.4f)),
-                        contentPadding = PaddingValues(horizontal = 4.dp)
-                    ) {
-                        Text("Sortir Descending", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-
-                    OutlinedButton(
-                        onClick = onAutoFixPllPosdiv,
-                        modifier = Modifier.weight(1f).height(42.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemGreen),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SystemGreen.copy(alpha = 0.4f)),
-                        contentPadding = PaddingValues(horizontal = 4.dp)
-                    ) {
-                        Text("Fix Posdiv PLL", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Reset Stock", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
 
                 if (rows.any { it.freq > baseMaxFreq }) {
-                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedButton(
                         onClick = onClearOc,
-                        modifier = Modifier.fillMaxWidth().height(40.dp),
-                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().height(38.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemRed),
                         border = androidx.compose.foundation.BorderStroke(1.dp, SystemRed.copy(alpha = 0.5f))
                     ) {
                         Text("Clear Overclock Tiers", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = GlassBorder)
-                Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-                // Quick Row Add Toolbar
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onAddAtTop,
-                        modifier = Modifier.weight(1f).height(38.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 6.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = SystemBlue)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("+ OPP Teratas", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SystemBlue)
-                    }
-
-                    OutlinedButton(
-                        onClick = onAddAtBottom,
-                        modifier = Modifier.weight(1f).height(38.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 6.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = SystemBlue)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("+ OPP Terbawah", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SystemBlue)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = GlassBorder)
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // AVS Anchor Switch
+            // Dedicated Efuse / AVS Anchor Card (Warm Amber Accent)
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFFFB703).copy(alpha = 0.08f))
+                    .border(1.dp, Color(0xFFFFB703).copy(alpha = 0.30f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("⚓ Proteksi Efuse AVS", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFFFFB703))
+                        }
                         Text(
-                            text = "Izinkan ubah freq anchor AVS",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = textPrimary
-                        )
-                        Text(
-                            text = "Abaikan abort efuse bila efuse SoC kosong atau tidak dicocokkan.",
+                            text = if (allowAnchorChange) "Perubahan frekuensi jangkar diizinkan (berisiko bila efuse SoC aktif)." else "3 frekuensi jangkar pabrik dikunci aman agar bootloop terhindar.",
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                             color = textSecondary
                         )
@@ -2232,7 +2129,11 @@ fun EditorContent(
                     Switch(
                         checked = allowAnchorChange,
                         onCheckedChange = onToggleAllowAnchorChange,
-                        colors = SwitchDefaults.colors(checkedThumbColor = SystemBlue)
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFFFFB703),
+                            checkedTrackColor = Color(0xFFFFB703).copy(alpha = 0.4f),
+                            uncheckedThumbColor = Color(0xFF8E8E93)
+                        )
                     )
                 }
             }
@@ -2366,17 +2267,13 @@ fun EditorContent(
                     )
             ) {
                 val isAnchor = state.anchorFreqs.contains(row.freq)
-                val canDeleteThisRow = rows.size > 1 && (!isAnchor || allowAnchorChange)
                 OppEditRow(
                     index = index,
                     row = row,
                     isOcTier = isOc,
                     isAnchor = isAnchor,
-                    canDelete = canDeleteThisRow,
                     rowIssue = rowIssue,
-                    onUpdate = { newRow -> onUpdateRow(index, newRow) },
-                    onDelete = { onDeleteRow(index) },
-                    onAddBelow = { onAddBelow(index) }
+                    onUpdate = { newRow -> onUpdateRow(index, newRow) }
                 )
             }
         }
@@ -2424,11 +2321,8 @@ fun OppEditRow(
     row: OppRow,
     isOcTier: Boolean = false,
     isAnchor: Boolean = false,
-    canDelete: Boolean,
     rowIssue: Issue? = null,
-    onUpdate: (OppRow) -> Unit,
-    onDelete: () -> Unit,
-    onAddBelow: () -> Unit
+    onUpdate: (OppRow) -> Unit
 ) {
     val isDark = LocalThemeIsDark.current
     val textPrimary = if (isDark) Color(0xFFFFFFFF) else Color(0xFF000000)
@@ -2509,28 +2403,6 @@ fun OppEditRow(
                     color = textSecondary
                 )
             }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(
-                    onClick = onAddBelow,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = SystemBlue)
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text("+ Below", fontSize = 12.sp, color = SystemBlue, fontWeight = FontWeight.SemiBold)
-                }
-
-                if (canDelete) {
-                    TextButton(
-                        onClick = onDelete,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(14.dp), tint = SystemRed)
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text("Del", fontSize = 12.sp, color = SystemRed, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -2557,7 +2429,7 @@ fun OppEditRow(
                     Text(
                         text = freqPreviewText,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                        color = SystemBlue
+                        color = SystemPurple
                     )
                 }
                 Box(
@@ -2588,7 +2460,7 @@ fun OppEditRow(
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        cursorBrush = SolidColor(SystemBlue),
+                        cursorBrush = SolidColor(SystemPurple),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -2626,7 +2498,7 @@ fun OppEditRow(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("+25M", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = SystemBlue)
+                        Text("+25M", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = SystemPurple)
                     }
                 }
             }
@@ -2648,7 +2520,7 @@ fun OppEditRow(
                     Text(
                         text = voltPreviewText,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                        color = SystemBlue
+                        color = SystemGreen
                     )
                 }
                 Box(
@@ -2679,7 +2551,7 @@ fun OppEditRow(
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        cursorBrush = SolidColor(SystemBlue),
+                        cursorBrush = SolidColor(SystemGreen),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -2702,7 +2574,7 @@ fun OppEditRow(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("-6.25m", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        Text("-6.25m", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = SystemGreen)
                     }
                     Box(
                         modifier = Modifier
@@ -2717,7 +2589,7 @@ fun OppEditRow(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("+6.25m", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = SystemBlue)
+                        Text("+6.25m", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFB703))
                     }
                 }
             }
@@ -2764,7 +2636,7 @@ fun OppEditRow(
                         textStyle = TextStyle(color = textPrimary, fontSize = 13.sp, fontFamily = FontFamily.Monospace),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        cursorBrush = SolidColor(SystemBlue),
+                        cursorBrush = SolidColor(SystemPurple),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -2815,7 +2687,7 @@ fun OppEditRow(
                         textStyle = TextStyle(color = textPrimary, fontSize = 13.sp, fontFamily = FontFamily.Monospace),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        cursorBrush = SolidColor(SystemBlue),
+                        cursorBrush = SolidColor(SystemPurple),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -2847,7 +2719,7 @@ fun OppEditRow(
                         textStyle = TextStyle(color = textPrimary, fontSize = 13.sp, fontFamily = FontFamily.Monospace),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        cursorBrush = SolidColor(SystemBlue),
+                        cursorBrush = SolidColor(Color(0xFFFFB703)),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -2875,7 +2747,7 @@ fun OppEditRow(
                     onClick = { onUpdate(row.copy(vsram = row.volt)) },
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
                 ) {
-                    Text("Fix Vsram=Volt", fontSize = 11.sp, color = SystemBlue, fontWeight = FontWeight.Bold)
+                    Text("Fix Vsram=Volt", fontSize = 11.sp, color = Color(0xFFFFB703), fontWeight = FontWeight.Bold)
                 }
             }
         }
