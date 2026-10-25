@@ -1450,15 +1450,15 @@ fun EditorContent(
         var offsetMvText by remember { mutableStateOf("-25") }
         AlertDialog(
             onDismissRequest = { showVoltOffsetDialog = false },
-            title = { Text("Offset Voltase Global (UV / OV)", fontWeight = FontWeight.Bold) },
+            title = { Text("Global Voltage Offset (UV / OV)", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "Menambahkan atau mengurangi voltase core dan vsram pada SEMUA baris tabel secara merata.",
+                        "Adds or subtracts voltage for core and vsram across ALL table rows uniformly.",
                         style = MaterialTheme.typography.bodySmall,
                         color = textSecondary
                     )
-                    Text("Pilihan Cepat (mV):", style = MaterialTheme.typography.labelSmall, color = textSecondary)
+                    Text("Quick Presets (mV):", style = MaterialTheme.typography.labelSmall, color = textSecondary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -1481,9 +1481,9 @@ fun EditorContent(
                         supportingText = {
                             val parsed = offsetMvText.toIntOrNull() ?: 0
                             val desc = when {
-                                parsed < 0 -> "Undervolt: ${-parsed} mV lebih hemat daya"
-                                parsed > 0 -> "Overvolt: +$parsed mV untuk stabilitas OC"
-                                else -> "Tidak ada perubahan voltase"
+                                parsed < 0 -> "Undervolt: ${-parsed} mV lower power consumption"
+                                parsed > 0 -> "Overvolt: +$parsed mV for OC stability"
+                                else -> "No voltage change"
                             }
                             Text(desc)
                         },
@@ -1504,12 +1504,12 @@ fun EditorContent(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SystemGreen)
                 ) {
-                    Text("Terapkan Offset", color = Color.White)
+                    Text("Apply Offset", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showVoltOffsetDialog = false }) {
-                    Text("Batal")
+                    Text("Cancel")
                 }
             },
             containerColor = surfaceColor,
@@ -1548,19 +1548,19 @@ fun EditorContent(
 
         AlertDialog(
             onDismissRequest = { showOcDialog = false },
-            title = { Text("Auto-Overclock Bertahap", fontWeight = FontWeight.Bold) },
+            title = { Text("Gradual Overclock Wizard", fontWeight = FontWeight.Bold) },
             text = {
                 Column(
                     modifier = Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "Membangun entri OPP bertahap di atas stock max (${baseMaxFreq / 1000} MHz) dengan step interval yang sama persis seperti stock (${naturalStepKhz / 1000} MHz).",
+                        "Builds step-by-step OPP entries above stock max (${baseMaxFreq / 1000} MHz) with step interval identical to stock (${naturalStepKhz / 1000} MHz).",
                         style = MaterialTheme.typography.bodySmall,
                         color = textSecondary
                     )
 
-                    Text("Pilihan Target OC (Preset):", style = MaterialTheme.typography.labelSmall, color = textSecondary)
+                    Text("Target Frequency Presets:", style = MaterialTheme.typography.labelSmall, color = textSecondary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -1582,7 +1582,7 @@ fun EditorContent(
                         value = topFreqText,
                         onValueChange = { topFreqText = it.filter { c -> c.isDigit() } },
                         label = { Text("Target Top Freq (kHz)") },
-                        supportingText = { Text("${parsedTop / 1000.0} MHz (${if (parsedTop > baseMaxFreq) "+${(parsedTop - baseMaxFreq) / 1000} MHz" else "sama/bawah stock"})") },
+                        supportingText = { Text("${parsedTop / 1000.0} MHz (${if (parsedTop > baseMaxFreq) "+${(parsedTop - baseMaxFreq) / 1000} MHz" else "equal/below stock"})") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
@@ -1592,7 +1592,7 @@ fun EditorContent(
                         value = stepFreqText,
                         onValueChange = { stepFreqText = it.filter { c -> c.isDigit() } },
                         label = { Text("Step Interval (kHz)") },
-                        supportingText = { Text("${parsedStep / 1000.0} MHz (Sesuai interval stock)") },
+                        supportingText = { Text("${parsedStep / 1000.0} MHz (Matches stock interval)") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
@@ -1601,10 +1601,10 @@ fun EditorContent(
                     OutlinedTextField(
                         value = topVoltText,
                         onValueChange = { topVoltText = it.filter { c -> c.isDigit() } },
-                        label = { Text("Plafon Voltase Top (10uV)") },
+                        label = { Text("Top Voltage Ceiling (10uV)") },
                         supportingText = {
                             val v = topVoltText.toIntOrNull() ?: defaultVoltTop
-                            Text("${v / 100.0} mV (Disesuaikan bertahap)")
+                            Text("${v / 100.0} mV (Adjusted gradually)")
                         },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -1623,7 +1623,7 @@ fun EditorContent(
                     ) {
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                             Text("Auto-Sync Fixed Slots", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = textPrimary)
-                            Text("Menyesuaikan kurva ke ${rows.size} slot tetap tanpa merusak layout modul", fontSize = 11.sp, color = textSecondary)
+                            Text("Maintains curve to ${rows.size} fixed slots without corrupting module layout", fontSize = 11.sp, color = textSecondary)
                         }
                         Switch(
                             checked = autoSyncChecked,
@@ -1641,7 +1641,7 @@ fun EditorContent(
                                 .padding(10.dp)
                         ) {
                             Text(
-                                "Preview Tingkatan OC Bertahap (+${generatedTiers.size} baris):",
+                                "Generated OC Tiers Preview (+${generatedTiers.size} rows):",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = SystemPurple
                             )
@@ -1664,12 +1664,12 @@ fun EditorContent(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SystemPurple)
                 ) {
-                    Text("Terapkan Overclock", color = Color.White)
+                    Text("Apply Overclock", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showOcDialog = false }) {
-                    Text("Batal")
+                    Text("Cancel")
                 }
             },
             containerColor = surfaceColor,
@@ -1710,7 +1710,7 @@ fun EditorContent(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        "Audit kesiapan modul sebelum disimpan ke storage untuk mencegah bootloop atau crash kernel DVFS:",
+                        "Audit module readiness before saving to storage to prevent bootloops or DVFS kernel crashes:",
                         style = MaterialTheme.typography.bodySmall,
                         color = textSecondary
                     )
@@ -1730,7 +1730,7 @@ fun EditorContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (isDescending) "✓ Urutan Freq Monotonik" else "⚠ Freq Tidak Terurut Turun!",
+                                    text = if (isDescending) "✓ Monotonic Freq Order" else "⚠ Freq Not Descending Order!",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
                                     color = if (isDescending) SystemGreen else SystemRed
@@ -1740,12 +1740,12 @@ fun EditorContent(
                                         onClick = onAutoSortDescending,
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        Text("Sortir Sekarang", fontSize = 11.sp, color = SystemPurple, fontWeight = FontWeight.Bold)
+                                        Text("Sort Now", fontSize = 11.sp, color = SystemPurple, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
                             Text(
-                                text = "Max: ${maxFreqMhz.toInt()} MHz → Min: ${minFreqMhz.toInt()} MHz (${rows.size} baris)",
+                                text = "Max: ${maxFreqMhz.toInt()} MHz → Min: ${minFreqMhz.toInt()} MHz (${rows.size} rows)",
                                 fontSize = 11.sp,
                                 color = textPrimary
                             )
@@ -1767,7 +1767,7 @@ fun EditorContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (invalidPllCount == 0) "✓ Clock PLL Posdiv: 100% OK" else "⚠ $invalidPllCount Baris Posdiv PLL Invalid",
+                                    text = if (invalidPllCount == 0) "✓ PLL Posdiv Clock: 100% OK" else "⚠ $invalidPllCount Rows Invalid PLL Posdiv",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
                                     color = if (invalidPllCount == 0) SystemGreen else SystemRed
@@ -1777,12 +1777,12 @@ fun EditorContent(
                                         onClick = onAutoFixPllPosdiv,
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        Text("Fix Otomatis", fontSize = 11.sp, color = SystemGreen, fontWeight = FontWeight.Bold)
+                                        Text("Auto Fix", fontSize = 11.sp, color = SystemGreen, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
                             Text(
-                                text = if (invalidPllCount == 0) "Seluruh frekuensi memiliki bit synthesizer PLL yang valid." else "Posdiv salah memicu __gpufreq_abort saat DVFS clock switching.",
+                                text = if (invalidPllCount == 0) "All frequencies have valid PLL synthesizer bits." else "Invalid posdiv triggers __gpufreq_abort during DVFS clock switching.",
                                 fontSize = 11.sp,
                                 color = textPrimary
                             )
@@ -1804,7 +1804,7 @@ fun EditorContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (invalidVsramCount == 0) "✓ Invariant Vsram >= Volt: Valid" else "⚠ $invalidVsramCount Baris Vsram < Volt Core",
+                                    text = if (invalidVsramCount == 0) "✓ Vsram >= Volt Invariant: Valid" else "⚠ $invalidVsramCount Rows Vsram < Core Volt",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
                                     color = if (invalidVsramCount == 0) SystemGreen else SystemRed
@@ -1814,12 +1814,12 @@ fun EditorContent(
                                         onClick = onAutoFixVsram,
                                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        Text("Naikkan Vsram", fontSize = 11.sp, color = Color(0xFFFFB703), fontWeight = FontWeight.Bold)
+                                        Text("Boost Vsram", fontSize = 11.sp, color = Color(0xFFFFB703), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
                             Text(
-                                text = "Peak Core Voltage: ${String.format(Locale.getDefault(), "%.2f mV", maxVoltMv)} ${if (maxVoltMv > 925.0) "(Voltase Tinggi - Awasi Suhu)" else "(Dalam batas aman)"}",
+                                text = "Peak Core Voltage: ${String.format(Locale.getDefault(), "%.2f mV", maxVoltMv)} ${if (maxVoltMv > 925.0) "(High Voltage - Watch Temp)" else "(Within safe limits)"}",
                                 fontSize = 11.sp,
                                 color = textPrimary
                             )
@@ -1836,13 +1836,13 @@ fun EditorContent(
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
-                                text = if (isSlotExact) "✓ Kapasitas Slot: Match (${rows.size} / ${state.slotCount})" else "ℹ Kapasitas Slot: ${rows.size} / ${state.slotCount} (${if (rows.size > state.slotCount) "+${rows.size - state.slotCount} baris" else "${rows.size - state.slotCount} baris"})",
+                                text = if (isSlotExact) "✓ Slot Capacity: Match (${rows.size} / ${state.slotCount})" else "ℹ Slot Capacity: ${rows.size} / ${state.slotCount} (${if (rows.size > state.slotCount) "+${rows.size - state.slotCount} rows" else "${rows.size - state.slotCount} rows"})",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
                                 color = if (isSlotExact) SystemGreen else Color(0xFFFFB703)
                             )
                             Text(
-                                text = if (isSlotExact) "Ukuran tabel sama persis dengan modul asli." else "Modul akan dialokasikan sesuai jumlah baris tabel aktif.",
+                                text = if (isSlotExact) "Table size matches original module exactly." else "Module will be allocated to match active table row count.",
                                 fontSize = 11.sp,
                                 color = textPrimary
                             )
