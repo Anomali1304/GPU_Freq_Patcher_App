@@ -2176,7 +2176,7 @@ fun EditorContent(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = if (hasErrors) "$errCount Error, $warnCount Warning Terdeteksi" else "$warnCount Peringatan / Info Tabel",
+                            text = if (hasErrors) "$errCount Error(s), $warnCount Warning(s) Detected" else "$warnCount Warning(s) / Info Table",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = if (hasErrors) SystemRed else Color(0xFFFFB703)
                         )
