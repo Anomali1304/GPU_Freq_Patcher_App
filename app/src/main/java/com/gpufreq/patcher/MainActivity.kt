@@ -1169,26 +1169,13 @@ fun ModificationListContent(
                     }
                 }
             }
-            item {
-                Column(
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp)
-                        .glassCard()
-                ) {
-                    patches.forEachIndexed { index, patch ->
-                        PatchRow(
-                            patch = patch, 
-                            onClick = { patchToShowDetails = patch },
-                            onDeleteClick = { patchToDelete = patch }
-                        )
-                        if (index < patches.size - 1) {
-                            HorizontalDivider(
-                                color = GlassBorder,
-                                modifier = Modifier.padding(start = 20.dp)
-                            )
-                        }
-                    }
-                }
+            items(patches, key = { it.id }) { patch ->
+                PatchCard(
+                    patch = patch, 
+                    onClick = { patchToShowDetails = patch },
+                    onDeleteClick = { patchToDelete = patch }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
     }
@@ -1196,100 +1183,100 @@ fun ModificationListContent(
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun PatchRow(
+fun PatchCard(
     patch: ModulePatch, 
     onClick: () -> Unit, 
     onDeleteClick: () -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault())
     val isDark = LocalThemeIsDark.current
     val textPrimary = if (isDark) Color(0xFFFFFFFF) else Color(0xFF000000)
     val textSecondary = if (isDark) Color(0xFFEBEBF5).copy(alpha = 0.6f) else Color(0xFF3C3C43).copy(alpha = 0.6f)
     
-    val rowInteractionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
+    val interactionSource = remember { MutableInteractionSource() }
     
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .bounceScale(rowInteractionSource)
-            .clickable(
-                interactionSource = rowInteractionSource,
-                indication = androidx.compose.foundation.LocalIndication.current,
-                onClick = onClick
-            )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 18.dp)
+            .glassCard(shape = RoundedCornerShape(18.dp))
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .padding(16.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(SystemPurple, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = IconHistory,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = patch.fileName,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(2.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    val maxFreqMhz = patch.originalFreq / 1000
-                    val minFreqMhz = patch.targetFreq / 1000
-                    val maxVoltMv = patch.originalVolt / 1000
-                    val minVoltMv = patch.targetVolt / 1000
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                brush = Brush.linearGradient(listOf(SystemBlue, SystemPurple)),
+                                shape = RoundedCornerShape(10.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(IconHistory, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    }
                     
-                    Text(
-                        text = "Max: ${maxFreqMhz}MHz (${maxVoltMv}mV) | Min: ${minFreqMhz}MHz (${minVoltMv}mV)",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                        color = SystemBlue
-                    )
-                    Text(
-                        text = "• ${dateFormat.format(Date(patch.timestamp))}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                        color = textSecondary
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = patch.fileName,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
+                            color = textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = dateFormat.format(Date(patch.timestamp)),
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = textSecondary
+                        )
+                    }
+                }
+                
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = SystemRed.copy(alpha = 0.8f), modifier = Modifier.size(18.dp))
                 }
             }
-        }
-        
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = onDeleteClick,
-                modifier = Modifier.size(36.dp)
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            val maxFreqMhz = patch.originalFreq / 1000
+            val minFreqMhz = patch.targetFreq / 1000
+            val maxVoltMv = patch.originalVolt / 1000
+            val minVoltMv = patch.targetVolt / 1000
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete history record",
-                    tint = SystemRed.copy(alpha = 0.75f),
-                    modifier = Modifier.size(18.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .background(SystemBlue.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text("Max: ${maxFreqMhz} MHz (${maxVoltMv} mV)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = SystemBlue)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .background(SystemPurple.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text("Min: ${minFreqMhz} MHz (${minVoltMv} mV)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = SystemPurple)
+                }
             }
-            Icon(
-                imageVector = IconChevronRight,
-                contentDescription = "Details",
-                tint = textSecondary.copy(alpha = 0.5f),
-                modifier = Modifier.size(16.dp)
-            )
         }
     }
 }
@@ -1917,108 +1904,115 @@ fun EditorContent(
                 // Tuning Action Buttons Row 1
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
                         onClick = { showOcDialog = true },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SystemBlue)
+                        colors = ButtonDefaults.buttonColors(containerColor = SystemBlue),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
                         Icon(IconTuning, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Generate OC", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Generate OC", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    OutlinedButton(
-                        onClick = onFitSlots,
-                        modifier = Modifier.weight(1f),
+                    Button(
+                        onClick = { showTemplateDialog = true },
+                        modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemPurple)
+                        colors = ButtonDefaults.buttonColors(containerColor = SystemPurple),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Fit ke ${state.slotCount} Slot", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Template Chipset", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Tuning Action Buttons Row 2
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
                         onClick = { showVoltOffsetDialog = true },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SystemGreen)
+                        colors = ButtonDefaults.buttonColors(containerColor = SystemGreen),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Text("Offset Volt (UV/OV)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        Text("Offset Volt (UV/OV)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
 
                     OutlinedButton(
                         onClick = { showDiffDialog = true },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemBlue)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemBlue),
+                        border = androidx.compose.foundation.BorderStroke(1.2.dp, SystemBlue.copy(alpha = 0.5f)),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Text("Inspect Diff", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Inspect Diff", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Tuning Action Buttons Row 3
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
-                        onClick = { showTemplateDialog = true },
-                        modifier = Modifier.weight(1f),
+                        onClick = onFitSlots,
+                        modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemPurple)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemPurple),
+                        border = androidx.compose.foundation.BorderStroke(1.2.dp, SystemPurple.copy(alpha = 0.5f)),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Text("Template Chipset", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Fit ke ${state.slotCount} Slot", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
                         onClick = onResetStock,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(42.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = textSecondary)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = textSecondary),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
                     ) {
-                        Text("Reset Stock", fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                    }
-
-                    if (rows.any { it.freq > baseMaxFreq }) {
-                        OutlinedButton(
-                            onClick = onClearOc,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemRed)
-                        ) {
-                            Text("Clear OC", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        }
+                        Text("Reset Stock", fontSize = 12.sp, fontWeight = FontWeight.Medium)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                if (rows.any { it.freq > baseMaxFreq }) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = onClearOc,
+                        modifier = Modifier.fillMaxWidth().height(40.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SystemRed),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SystemRed.copy(alpha = 0.5f))
+                    ) {
+                        Text("Clear Overclock Tiers", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
                 HorizontalDivider(color = GlassBorder)
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // Quick Row Add Toolbar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = onAddAtTop,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(38.dp),
                         shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                        contentPadding = PaddingValues(horizontal = 6.dp)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = SystemBlue)
                         Spacer(modifier = Modifier.width(4.dp))
@@ -2027,9 +2021,9 @@ fun EditorContent(
 
                     OutlinedButton(
                         onClick = onAddAtBottom,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(38.dp),
                         shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                        contentPadding = PaddingValues(horizontal = 6.dp)
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = SystemBlue)
                         Spacer(modifier = Modifier.width(4.dp))
@@ -2178,24 +2172,20 @@ fun EditorContent(
             items = rows,
             key = { index, _ -> index }
         ) { index, row ->
-            val topRadius = if (index == 0) 22.dp else 0.dp
-            val bottomRadius = if (index == rows.size - 1) 22.dp else 0.dp
-            val shape = RoundedCornerShape(
-                topStart = topRadius, topEnd = topRadius,
-                bottomStart = bottomRadius, bottomEnd = bottomRadius
-            )
+            val rowShape = RoundedCornerShape(18.dp)
             val rowIssue = issues.firstOrNull { it.row == index }
             val isOc = row.freq > baseMaxFreq
 
-            Column(
+            Box(
                 modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .glassCard(shape = shape)
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 5.dp)
+                    .glassCard(shape = rowShape)
                     .then(
                         if (rowIssue?.severity == Severity.ERROR) {
-                            Modifier.border(1.2.dp, SystemRed.copy(alpha = 0.8f), shape)
+                            Modifier.border(1.5.dp, SystemRed.copy(alpha = 0.85f), rowShape)
                         } else if (rowIssue?.severity == Severity.WARNING) {
-                            Modifier.border(1.dp, Color(0xFFFFB703).copy(alpha = 0.6f), shape)
+                            Modifier.border(1.2.dp, Color(0xFFFFB703).copy(alpha = 0.7f), rowShape)
                         } else Modifier
                     )
             ) {
@@ -2209,12 +2199,6 @@ fun EditorContent(
                     onDelete = { onDeleteRow(index) },
                     onAddBelow = { onAddBelow(index) }
                 )
-                if (index < rows.size - 1) {
-                    HorizontalDivider(
-                        color = GlassBorder,
-                        modifier = Modifier.padding(start = 20.dp)
-                    )
-                }
             }
         }
 
