@@ -878,7 +878,7 @@ fun EmptyEditorContent() {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Silakan pilih dan import modul kernel (.ko) melalui tab Home/History di bawah.",
+                "Please select and import a kernel module (.ko) via the Home/History tab below.",
                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
                 color = textSecondary,
                 textAlign = TextAlign.Center
