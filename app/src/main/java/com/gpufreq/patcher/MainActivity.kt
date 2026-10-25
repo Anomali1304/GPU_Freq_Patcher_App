@@ -1370,7 +1370,7 @@ fun EditorContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "Perbandingan frekuensi & voltase antara modul asli (${stockRows.size} slot) dengan tabel saat ini (${rows.size} baris):",
+                        "Comparison of frequency & voltage between original module (${stockRows.size} slots) and current table (${rows.size} rows):",
                         style = MaterialTheme.typography.bodySmall,
                         color = textSecondary
                     )
@@ -1438,7 +1438,7 @@ fun EditorContent(
                     onClick = { showDiffDialog = false },
                     colors = ButtonDefaults.buttonColors(containerColor = SystemBlue)
                 ) {
-                    Text("Tutup")
+                    Text("Close")
                 }
             },
             containerColor = surfaceColor,
