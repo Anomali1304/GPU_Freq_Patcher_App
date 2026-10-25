@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Build APK & AAB (${{ github.event.inputs.build_type || 'release' }})
+    name: Build APK (Release)
     runs-on: ubuntu-latest
 
     steps:
